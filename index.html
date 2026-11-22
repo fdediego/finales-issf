@@ -122,23 +122,6 @@
     .voice-setting select:disabled { opacity: 0.6; }
     .voice-setting select:focus-visible { outline: 3px solid white; outline-offset: 3px; }
 
-    .voice-test {
-      min-height: 44px;
-      margin-top: 12px;
-      padding: 8px 18px;
-      background: #0f766e;
-      font-size: 1rem;
-    }
-
-    .voice-test:disabled { opacity: 0.6; cursor: default; }
-
-    .voice-info {
-      margin: 8px 0 0;
-      color: #aab6c8;
-      font-size: 0.85rem;
-      line-height: 1.4;
-    }
-
     .hint {
       min-height: 2.8rem;
       margin: 20px 0 0;
@@ -182,13 +165,7 @@
         <option value="en-GB">English</option>
       </select>
     </div>
-    <div class="voice-setting">
-      <label for="voice-select">Voz</label>
-      <select id="voice-select" aria-describedby="voice-info"></select>
-    </div>
-    <button class="voice-test" id="voice-test" type="button">Probar voz</button>
-    <p class="voice-info" id="voice-info" aria-live="polite"></p>
-    <p class="hint" id="hint">Elige el idioma antes de empezar. La voz depende del dispositivo; mantén esta pantalla abierta durante el ejercicio.</p>
+    <p class="hint" id="hint" aria-live="polite">Elige el idioma antes de empezar. La voz depende del dispositivo; mantén esta pantalla abierta durante el ejercicio.</p>
     <button class="install" id="install" type="button">Instalar aplicación</button>
   </main>
   <script src="app.js" defer></script>

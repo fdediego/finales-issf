@@ -3,9 +3,6 @@ const clockElement = document.querySelector("#clock");
 const hintElement = document.querySelector("#hint");
 const installButton = document.querySelector("#install");
 const voiceLanguage = document.querySelector("#voice-language");
-const voiceSelect = document.querySelector("#voice-select");
-const voiceTest = document.querySelector("#voice-test");
-const voiceInfo = document.querySelector("#voice-info");
 
 const voiceTexts = {
   "es-ES": {
@@ -37,9 +34,6 @@ const state = {
   wakeLock: null,
   wakeLockPending: false,
   installPrompt: null,
-  voices: [],
-  selectedVoice: null,
-  voicesChanged: false,
 };
 
 function setStatus(text) {
@@ -54,8 +48,7 @@ function speak(text, onComplete, options = {}) {
   }
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = state.selectedVoice ? state.selectedVoice.lang : voiceLanguage.value;
-  if (state.selectedVoice) utterance.voice = state.selectedVoice;
+  utterance.lang = voiceLanguage.value;
   if (options.rate !== undefined) utterance.rate = options.rate;
   if (options.pitch !== undefined) utterance.pitch = options.pitch;
   let completed = false;
@@ -67,52 +60,11 @@ function speak(text, onComplete, options = {}) {
   utterance.onend = complete;
   utterance.onerror = (event) => {
     if (event.error !== "interrupted" && event.error !== "canceled") {
-      voiceInfo.textContent = `No se pudo reproducir la voz (${event.error || "error desconocido"}). Comprueba las voces del dispositivo.`;
+      hintElement.textContent = `No se pudo reproducir la voz (${event.error || "error desconocido"}). Comprueba las voces del dispositivo.`;
     }
     complete();
   };
   window.speechSynthesis.speak(utterance);
-}
-
-function updateVoiceControls() {
-  const active = state.mode !== null;
-  voiceLanguage.disabled = active;
-  voiceSelect.disabled = active || state.voices.length === 0;
-  voiceTest.disabled = active || state.voices.length === 0;
-}
-
-function refreshVoices() {
-  if (state.mode) {
-    state.voicesChanged = true;
-    return;
-  }
-  state.voicesChanged = false;
-  const previous = state.selectedVoice ? state.selectedVoice.voiceURI : null;
-  const language = voiceLanguage.value.split("-")[0].toLowerCase();
-  state.voices = "speechSynthesis" in window
-    ? window.speechSynthesis.getVoices().filter((voice) =>
-      voice.lang.toLowerCase().split("-")[0] === language)
-    : [];
-  voiceSelect.replaceChildren();
-  for (const voice of state.voices) {
-    const option = document.createElement("option");
-    option.value = voice.voiceURI;
-    option.textContent = `${voice.name} (${voice.lang})`;
-    voiceSelect.append(option);
-  }
-  if (state.voices.length) {
-    const selected = state.voices.find((voice) => voice.voiceURI === previous) || state.voices[0];
-    voiceSelect.value = selected.voiceURI;
-    state.selectedVoice = selected;
-    voiceInfo.textContent = "Selecciona una voz y pulsa «Probar voz».";
-  } else {
-    state.selectedVoice = null;
-    const option = document.createElement("option");
-    option.textContent = "No hay voces disponibles";
-    voiceSelect.append(option);
-    voiceInfo.textContent = "No se ha encontrado ninguna voz para este idioma. Comprueba las voces de texto a voz del dispositivo; el navegador intentará usar su voz predeterminada.";
-  }
-  updateVoiceControls();
 }
 
 function formatTime(seconds) {
@@ -152,8 +104,7 @@ function stopTimer(message = "Entrenamiento parado") {
   state.runId += 1;
   state.mode = null;
   state.phase = "idle";
-  if (state.voicesChanged) refreshVoices();
-  updateVoiceControls();
+  voiceLanguage.disabled = false;
   if ("speechSynthesis" in window) {
     window.speechSynthesis.cancel();
   }
@@ -306,7 +257,7 @@ function tick() {
 function startTimer(mode) {
   stopTimer("Preparando...");
   state.mode = mode;
-  updateVoiceControls();
+  voiceLanguage.disabled = true;
   clockElement.textContent = "--:--";
   if (mode === "individual") {
     state.phase = "individual-initial-delay";
@@ -324,26 +275,6 @@ function startTimer(mode) {
 document.querySelector("#series").addEventListener("click", () => startTimer("serie"));
 document.querySelector("#individual").addEventListener("click", () => startTimer("individual"));
 document.querySelector("#stop").addEventListener("click", () => stopTimer());
-voiceLanguage.addEventListener("change", () => {
-  if ("speechSynthesis" in window) window.speechSynthesis.cancel();
-  refreshVoices();
-});
-voiceSelect.addEventListener("change", () => {
-  if ("speechSynthesis" in window) window.speechSynthesis.cancel();
-  state.selectedVoice = state.voices.find((voice) => voice.voiceURI === voiceSelect.value) || null;
-});
-voiceTest.addEventListener("click", () => {
-  if (state.mode || !state.selectedVoice) return;
-  const text = voiceLanguage.value === "en-GB"
-    ? "For the next competition shot. Load!"
-    : "Para el siguiente disparo de competición. ¡Carguen!";
-  speak(text);
-});
-if ("speechSynthesis" in window) {
-  window.speechSynthesis.addEventListener("voiceschanged", refreshVoices);
-}
-refreshVoices();
-
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") acquireWakeLock();
 });

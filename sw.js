@@ -1,4 +1,4 @@
-const CACHE_NAME = "finales-issf-v6";
+const CACHE_NAME = "finales-issf-v7";
 const APP_SHELL = [
   "./",
   "./index.html",
